@@ -1,31 +1,6 @@
-# react-native-amani-sdk
+# Amani Low Level SDK (v2) bindings for react native
+This repository contains react native bindings for our [Android](https://github.com/AmaniTechnologiesLtd/Android_SDK_V2_Public) and [iOS](https://github.com/AmaniTechnologiesLtd/IOS_SDK_V2_Public) native SDK's.
 
-a
+On the [example folder](https://github.comAmaniTechnologiesLtd/react_v2/tree/main/example) you can find a close to real world solution on how to use this SDK.
 
-## Installation
-
-```sh
-npm install react-native-amani-sdk
-```
-
-## Usage
-
-```js
-import { multiply } from 'react-native-amani-sdk';
-
-// ...
-
-const result = await multiply(3, 7);
-```
-
-## Contributing
-
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
-
-## License
-
-MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+Or see the [documentation repo](https://documentation.amani.ai) for documentation.

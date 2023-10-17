@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { AmaniSDK } from 'react-native-amani-sdk';
 
 export const HomeScreen = ({ navigation }: { navigation: any }) => {
@@ -10,7 +10,7 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
         server: 'https://dev.amani.ai',
         idCardNumber: '38203450858-r3',
         customerToken:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjk3NDUwMzgxLCJpYXQiOjE2OTY4NDU1ODEsImp0aSI6IjQ5NmE5ODUyMWY1NjQ0N2ZiM2JiN2EzYTBjNWMwZDk0IiwidXNlcl9pZCI6IjA5YmZhOWM2LWZhYmMtNDYwNy1iMDM3LTc5NWQ1N2UzNGNjYyIsImNvbXBhbnlfaWQiOiJmMDNkNWYzNC1mOGJmLTRlMzUtYmE1OC1jNjIxYzI2YzYyZmQiLCJwcm9maWxlX2lkIjoiMDY5ZmIyYjUtMjRiOS00MzY0LTllMWEtYmFlOTY3NzJmMTQ4IiwiYXBpX3VzZXIiOmZhbHNlfQ.Mah6WNGBKQpTLJ7SVxYOtmKjZU7Mr26vPKh9Uv-ZgfM',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjk4MDU3ODY3LCJpYXQiOjE2OTc0NTMwNjcsImp0aSI6IjY1ZjJjNGFkMTQ0ZjQxOTFiMDA5YWMwOWZlNmFjYWI1IiwidXNlcl9pZCI6IjA5YmZhOWM2LWZhYmMtNDYwNy1iMDM3LTc5NWQ1N2UzNGNjYyIsImNvbXBhbnlfaWQiOiJmMDNkNWYzNC1mOGJmLTRlMzUtYmE1OC1jNjIxYzI2YzYyZmQiLCJwcm9maWxlX2lkIjoiMDY5ZmIyYjUtMjRiOS00MzY0LTllMWEtYmFlOTY3NzJmMTQ4IiwiYXBpX3VzZXIiOmZhbHNlfQ._2wD2lZgkgVRordvUJrfVqGit-v70QUCH2Q38qc7Rw8',
         lang: 'tr',
         useLocation: true,
         apiVersion: 'v2',
@@ -61,6 +61,16 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
           >
             <Text style={styles.button$text}>Pose Estimation Selfie</Text>
           </Pressable>
+          {Platform.OS === 'android' ? (
+            <Pressable
+              style={styles.button}
+              onPress={() => navigation.navigate('AndroidNFCScreen')}
+            >
+              <Text style={styles.button$text}>Android NFC Capture</Text>
+            </Pressable>
+          ) : (
+            <></>
+          )}
         </View>
       ) : (
         <Text style={styles.desc}>Failed to initialize the AmaniSDK</Text>

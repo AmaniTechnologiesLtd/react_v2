@@ -52,6 +52,21 @@ export class IDCaptureHelper {
   }
 
   /**
+   * Sets the idWithNFC flag on NFCCaptureModule
+   *
+   * **Note:** see the documentation for the full usage
+   * @throws {WrongPlatformError}
+   * @returns {Promise<void>}
+   */
+  public setNFCCaptureFlagOnAndroid({ withNFC }: { withNFC: boolean }) {
+    if (Platform.OS !== 'android') {
+      throw new WrongPlatformError('setNFCCaptureFlagOnAndroid', 'android');
+    }
+
+    return this.platformModule.idCaptureSetWithNFC({ withNFC });
+  }
+
+  /**
    * Sets the type of the ID to capture.
    *
    * If you don't call this function before the start function,

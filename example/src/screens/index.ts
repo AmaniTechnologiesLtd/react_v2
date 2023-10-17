@@ -3,3 +3,4 @@ export * from './SelfieScreen';
 export * from './AutoSelfieSceen';
 export * from './IDCaptureScreen';
 export * from './PoseEstimationScreen';
+export * from './AndroidNFCCapture';

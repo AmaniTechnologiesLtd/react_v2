@@ -71,7 +71,7 @@ class IdCapture {
       })
 
       if (frag == null) {
-        promise.reject("30005", "Failed to initialize ID Capture")
+        promise.reject("40005", "Failed to initialize ID Capture")
       }
 
       val fragmentManager = activity.supportFragmentManager

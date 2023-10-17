@@ -184,6 +184,13 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun idCaptureSetWithNFC(params: ReadableMap, promise: Promise) {
+    val nfcState = params.getBoolean("withNFC")
+    IdCapture.instance.setWithNFC(nfcState)
+    promise.resolve(true)
+  }
+
+  @ReactMethod
   fun selfieStart(promise: Promise) {
     Selfie.instance.start(0, (currentActivity as ReactActivity), promise)
   }
@@ -240,9 +247,10 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun androidStartNFC(params: ReadableMap, promise: Promise) {
-    val birthDate = params.getString("birthDate")!!
-    val expireDate = params.getString("expireDate")!!
-    val documentNo = params.getString("documentNo")!!
+    val birthDate = params.getString("birthDate")
+    val expireDate = params.getString("expireDate")
+    val documentNo = params.getString("documentNo")
+    NFC.instance.setSendEvent(this::sendEventMap)
     NFC.instance.start(
       birthDate,
       expireDate,
@@ -284,6 +292,15 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
   private fun sendEvent(
     eventName: String,
     params: String
+  ) {
+    this.reactApplicationContext
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+      ?.emit(eventName, params)
+  }
+
+  private fun sendEventMap(
+    eventName: String,
+    params: WritableNativeMap
   ) {
     this.reactApplicationContext
       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)

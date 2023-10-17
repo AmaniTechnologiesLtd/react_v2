@@ -156,9 +156,9 @@ export class AmaniSDK {
     );
 
     return () => {
-      this.eventEmitter.removeSubscription(onErrorListener);
-      this.eventEmitter.removeSubscription(onProfileListener);
-      this.eventEmitter.removeSubscription(onStepResultListener);
+      onErrorListener.remove();
+      onProfileListener.remove();
+      onStepResultListener.remove();
     };
   }
 }

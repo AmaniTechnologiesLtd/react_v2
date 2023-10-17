@@ -1,7 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AmaniSDK, IDSide } from 'react-native-amani-sdk';
 import { useNavigation } from '@react-navigation/native';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 export const IDCaptureScreen = () => {
   const navigation = useNavigation();
@@ -41,6 +48,11 @@ export const IDCaptureScreen = () => {
       .then((backImageData) => {
         setBackImage(backImageData);
         setCaptureProcessCompleted(true);
+        if (Platform.OS === 'android') {
+          AmaniSDK.sharedInstance.idCapture.setNFCCaptureFlagOnAndroid({
+            withNFC: true,
+          });
+        }
       });
   }, []);
 

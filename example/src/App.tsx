@@ -8,9 +8,10 @@ import {
   AutoSelfieScreen,
   IDCaptureScreen,
   PoseEstimationScreen,
+  AndroidNFCScreen,
 } from './screens';
-const Stack = createNativeStackNavigator();
 
+const Stack = createNativeStackNavigator();
 export const App = () => (
   <NavigationContainer>
     <Stack.Navigator initialRouteName="Home">
@@ -18,6 +19,7 @@ export const App = () => (
       <Stack.Screen name="SelfieScreen" component={SelfieScreen} />
       <Stack.Screen name="AutoSelfieScreen" component={AutoSelfieScreen} />
       <Stack.Screen name="IDCaptureScreen" component={IDCaptureScreen} />
+      <Stack.Screen name="AndroidNFCScreen" component={AndroidNFCScreen} />
       <Stack.Screen
         name="PoseEstimationScreen"
         component={PoseEstimationScreen}
