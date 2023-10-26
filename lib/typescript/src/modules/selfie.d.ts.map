@@ -1,0 +1,1 @@
+{"version":3,"file":"selfie.d.ts","sourceRoot":"","sources":["../../../../src/modules/selfie.ts"],"names":[],"mappings":"AAAA,qBAAa,YAAY;IAGvB,OAAO,CAAC,cAAc,CAAM;gBAChB,cAAc,EAAE,GAAG;IAI/B;;;;;;OAMG;IACI,MAAM,IAAI,OAAO,CAAC,OAAO,CAAC;IAIjC;;;;;;;OAOG;IACI,OAAO,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;IAI3C;;;;OAIG;IACU,KAAK,IAAI,OAAO,CAAC,MAAM,CAAC;CAItC"}

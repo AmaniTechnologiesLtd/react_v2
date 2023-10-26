@@ -1,0 +1,1 @@
+{"version":3,"file":"androidNfc.d.ts","sourceRoot":"","sources":["../../../../src/modules/androidNfc.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,UAAU,CAAC;AAExC,qBAAa,UAAU;IACrB,OAAO,CAAC,cAAc,CAAM;gBAEhB,cAAc,EAAE,GAAG;IAI/B;;;;;;;OAOG;IACU,QAAQ,CAAC,OAAO,CAAC,EAAE,OAAO,GAAG,OAAO,CAAC,OAAO,CAAC;IAwB1D;;;;;OAKG;IACI,eAAe;IAIf,SAAS;CAGjB"}
