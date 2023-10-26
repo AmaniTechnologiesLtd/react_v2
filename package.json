@@ -41,15 +41,18 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "eKyc",
+    "id-verification",
+    "amani"
   ],
-  "repository": "https://github.com/ddnzcn/react-native-amani-sdk",
-  "author": "Deniz Can <deniz@amani.tech> (https://github.com/ddnzcn)",
+  "repository": "https://github.com/AmaniTechnologiesLtd/react_v2",
+  "author": "Amani Technologies LTD <hello@amani.tech> (https://github.com/AmaniTechnologiesLtd)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ddnzcn/react-native-amani-sdk/issues"
+    "url": "https://github.com/AmaniTechnologiesLtd/react_v2/issues"
   },
-  "homepage": "https://github.com/ddnzcn/react-native-amani-sdk#readme",
+  "homepage": "https://amani.ai",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -105,7 +108,7 @@
       "tagName": "v${version}"
     },
     "npm": {
-      "publish": true
+      "publish": false 
     },
     "github": {
       "release": true
