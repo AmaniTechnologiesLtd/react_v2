@@ -1,6 +1,6 @@
 {
   "name": "react-native-amani-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "a",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -108,7 +108,7 @@
       "tagName": "v${version}"
     },
     "npm": {
-      "publish": false 
+      "publish": false
     },
     "github": {
       "release": true
