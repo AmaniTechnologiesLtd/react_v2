@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { AmaniSDK } from 'react-native-amani-sdk';
+import { LoginCredentials } from './LoginCredentials';
 
 export const HomeScreen = ({ navigation }: { navigation: any }) => {
   const [isInitialized, setInitialized] = useState(false);
   useEffect(() => {
     AmaniSDK.sharedInstance
       .initAmani({
-        server: 'https://dev.amani.ai',
-        idCardNumber: '38203450858-r3',
+        server: LoginCredentials.serverURL,
+        idCardNumber: LoginCredentials.idCardNumber,
         customerToken:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjk4MDU3ODY3LCJpYXQiOjE2OTc0NTMwNjcsImp0aSI6IjY1ZjJjNGFkMTQ0ZjQxOTFiMDA5YWMwOWZlNmFjYWI1IiwidXNlcl9pZCI6IjA5YmZhOWM2LWZhYmMtNDYwNy1iMDM3LTc5NWQ1N2UzNGNjYyIsImNvbXBhbnlfaWQiOiJmMDNkNWYzNC1mOGJmLTRlMzUtYmE1OC1jNjIxYzI2YzYyZmQiLCJwcm9maWxlX2lkIjoiMDY5ZmIyYjUtMjRiOS00MzY0LTllMWEtYmFlOTY3NzJmMTQ4IiwiYXBpX3VzZXIiOmZhbHNlfQ._2wD2lZgkgVRordvUJrfVqGit-v70QUCH2Q38qc7Rw8',
+          LoginCredentials.token,
         lang: 'tr',
         useLocation: true,
         apiVersion: 'v2',
@@ -43,6 +44,14 @@ export const HomeScreen = ({ navigation }: { navigation: any }) => {
           >
             <Text style={styles.button$text}>Auto Selfie</Text>
           </Pressable>
+
+          <Pressable
+            style={styles.button}
+            onPress={() => navigation.navigate('DocumentCapture')}
+          >
+            <Text style={styles.button$text}>Document Capture</Text>
+          </Pressable>
+
           <Pressable
             style={styles.button}
             onPress={() => navigation.navigate('SelfieScreen')}

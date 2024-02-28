@@ -1,6 +1,7 @@
 package com.amanisdk.extensions
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
 import android.view.View
@@ -10,10 +11,13 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
 import java.io.ByteArrayOutputStream
 import com.google.gson.Gson
+import java.io.File
 
 
 interface JSONConvertible{
@@ -102,4 +106,15 @@ fun FrameLayout.setupBackButton(@DrawableRes drawable: Int, onClick: () -> Unit 
 
   this.addView(button)
   return button
+}
+
+fun String.filePathToBitmap(): Bitmap? {
+  return BitmapFactory.decodeFile(this)
+}
+
+fun ReactActivity.removeFragment(fragment: Fragment?) {
+  if (fragment == null) return
+  this.supportFragmentManager
+    .beginTransaction()
+    .remove(fragment).commit()
 }

@@ -10,6 +10,7 @@ import {
   PoseEstimationScreen,
   AndroidNFCScreen,
 } from './screens';
+import { DocumentCapture } from './screens/DocumentCaptureScreen';
 
 const Stack = createNativeStackNavigator();
 export const App = () => (
@@ -20,6 +21,7 @@ export const App = () => (
       <Stack.Screen name="AutoSelfieScreen" component={AutoSelfieScreen} />
       <Stack.Screen name="IDCaptureScreen" component={IDCaptureScreen} />
       <Stack.Screen name="AndroidNFCScreen" component={AndroidNFCScreen} />
+      <Stack.Screen name="DocumentCapture" component={DocumentCapture} />
       <Stack.Screen
         name="PoseEstimationScreen"
         component={PoseEstimationScreen}

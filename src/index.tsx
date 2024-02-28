@@ -9,6 +9,7 @@ import {
 import { AndroidNFC } from './modules/androidNfc';
 import { IOSNFC } from './modules/iosNfc';
 import { type DelegateEvents, type InitAmaniParams } from './utils/types';
+import { DocumentCaptureHelper } from './modules/documentCapture';
 
 const LINKING_ERROR =
   `The package 'react-native-amani-sdk' doesn't seem to be linked. Make sure: \n\n` +
@@ -87,6 +88,13 @@ export class AmaniSDK {
    */
   public get androidNFCCapture() {
     return new AndroidNFC(this.platformModule);
+  }
+
+  /**
+   * Utility class to capture document
+   */
+  public get documentCapture() {
+    return new DocumentCaptureHelper(this.platformModule);
   }
 
   /**

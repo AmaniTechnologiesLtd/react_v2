@@ -223,7 +223,7 @@ PODS:
   - React-jsinspector (0.69.12)
   - React-logger (0.69.12):
     - glog
-  - react-native-amani-sdk (0.1.0):
+  - react-native-amani-sdk (0.1.1):
     - AmaniSDK (~> 3)
     - React-Core
   - react-native-safe-area-context (4.7.2):
@@ -439,7 +439,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ce0b9aa647bdf94126eb2ee1f235d329eb8c0aec
   React-jsinspector: f275698149311abc8c32ebb97797d6b97c44adde
   React-logger: da69d7f1c9501c78cd60776d52a60d7fa5e4d9c2
-  react-native-amani-sdk: 8c2fdb766669df20dafc78bdd55b4b0fa777b7f0
+  react-native-amani-sdk: a8bc9025c90aac82fda3265dfecf6539a739501b
   react-native-safe-area-context: 7aa8e6d9d0f3100a820efb1a98af68aa747f9284
   React-perflogger: 5ade0a1627352f1647d283e78331819bb46cceae
   React-RCTActionSheet: 8e94f1e46e09c7035b81fe56c0ed8d78f3ccd340
@@ -458,4 +458,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 808ab7199d48994e46f1c696f3ca45490d42d09b
 
-COCOAPODS: 1.13.0
+COCOAPODS: 1.10.1

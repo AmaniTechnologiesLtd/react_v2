@@ -272,6 +272,27 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun documentCaptureStart(params: ReadableMap, promise: Promise) {
+    val docCount = params.getInt("documentCount")
+    DocumentCapture.instance.start(
+      activity = currentActivity as ReactActivity,
+      promise = promise
+    )
+  }
+
+
+  @ReactMethod
+  fun documentCaptureSetType(params: ReadableMap, promise: Promise) {
+    val type = params.getString("type")!!
+    DocumentCapture.instance.setType(type, promise)
+  }
+
+  @ReactMethod
+  fun documentCaptureUpload(promise: Promise) {
+    DocumentCapture.instance.upload((currentActivity as ReactActivity), promise)
+  }
+
+  @ReactMethod
   fun addListener(eventName: String?) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
