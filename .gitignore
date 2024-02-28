@@ -65,3 +65,4 @@ android/keystores/debug.keystore
 
 # Turborepo
 .turbo/
+example/src/screens/LoginCredentials.ts
