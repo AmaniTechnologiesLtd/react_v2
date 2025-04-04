@@ -25,6 +25,8 @@ extension Dictionary where Key == String, Value == Any {
     } catch {
       print(error)
     }
+    return nil
+
   }
   
 }

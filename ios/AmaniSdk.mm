@@ -12,6 +12,24 @@ RCT_EXTERN_METHOD(
                   getCustomerInfo: (RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
+  
+// MARK: DocumentCapture
+RCT_EXTERN_METHOD(
+                  documentCaptureStart: (NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
+
+RCT_EXTERN_METHOD(
+                  documentCaptureSetType: (NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
+
+RCT_EXTERN_METHOD(
+                  documentCaptureUpload:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
 
 // MARK: IDCapture
 RCT_EXTERN_METHOD(

@@ -121,6 +121,36 @@ class AmaniSdk: RCTEventEmitter {
       reject("RNAmani-IdCapture", "NFC is only available after iOS 13 or newer", nil)
     }
   }
+  
+    // MARK: Documentcapture
+  
+  @objc
+  public func documentCaptureStart(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let params: IdCaptureParams = convertParamsTo(params: params) else {
+      reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
+      return
+    }
+    let documentCapture = DocumentCaptureModule()
+    DispatchQueue.main.async {
+      documentCapture.start(stepID: params.stepId ?? 0, resolve: resolve, rejecter: reject)
+    }
+  }
+  
+  @objc
+  public func documentCaptureSetType(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let params: SetTypeParams = convertParamsTo(params: params) else {
+      reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
+      return
+    }
+    let documentCapture = DocumentCaptureModule()
+    documentCapture.setType(type: params.type, resolve: resolve, rejecter: reject)
+  }
+  
+  @objc
+  public func documentCaptureUpload(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let documentCapture = DocumentCaptureModule()
+    documentCapture.upload(resolve: resolve, rejecter: reject)
+  }
 
   // MARK: Selfie
 
