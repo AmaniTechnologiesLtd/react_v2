@@ -84,13 +84,8 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
         }
 
         override fun profileStatus(profileStatus: ProfileStatus) {
-          val returnMap = mapOf(
-            "profileId" to profileStatus.profile,
-            "status" to profileStatus.status,
-            "amlStatus" to profileStatus.amlStatus,
-            "risk" to profileStatus.risk
-          )
-          sendEvent("profileStatus", Gson().toJson(returnMap))
+          val json = Gson().toJson(profileStatus)
+          sendEvent("profileStatus", json)
         }
 
         override fun stepsResult(stepsResult: StepsResult?) {
