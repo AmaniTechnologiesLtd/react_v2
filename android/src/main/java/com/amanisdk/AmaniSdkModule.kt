@@ -43,7 +43,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
     // Oddly returns boolean instead of boolean?
     val useLocation = params.getBoolean("useLocation")
     val sharedSecret = params.getString("sharedSecret")
-    val version = params.getString("version")
+    val version = params.getString("apiVersion")
 
     var amaniVersion: AmaniVersion = AmaniVersion.V2
     version?.let {
