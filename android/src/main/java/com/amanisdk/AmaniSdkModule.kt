@@ -43,7 +43,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
     // Oddly returns boolean instead of boolean?
     val useLocation = params.getBoolean("useLocation")
     val sharedSecret = params.getString("sharedSecret")
-    val version = params.getString("version")
+    val version = params.getString("apiVersion")
 
     var amaniVersion: AmaniVersion = AmaniVersion.V2
     version?.let {
@@ -84,13 +84,8 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
         }
 
         override fun profileStatus(profileStatus: ProfileStatus) {
-          val returnMap = mapOf(
-            "profileId" to profileStatus.profile,
-            "status" to profileStatus.status,
-            "amlStatus" to profileStatus.amlStatus,
-            "risk" to profileStatus.risk
-          )
-          sendEvent("profileStatus", Gson().toJson(returnMap))
+          val json = Gson().toJson(profileStatus)
+          sendEvent("profileStatus", json)
         }
 
         override fun stepsResult(stepsResult: StepsResult?) {
