@@ -102,7 +102,7 @@ RCT_EXTERN_METHOD(poseEstimationUpload: (RCTPromiseResolveBlock)resolve
 // MARK: NFC
 RCT_EXTERN_METHOD(startIOSNFCCaptureWithBase64Image:(NSString *)imageData
                   resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseResolveBlock)reject
+                  rejecter:(RCTPromiseRejectBlock)reject
                   )
 
 RCT_EXTERN_METHOD(startIOSNFCCaptureWithNVIModel:(NSDictionary *)params
