@@ -50,7 +50,8 @@ RCT_EXTERN_METHOD(
                   )
 
 RCT_EXTERN_METHOD(
-                  idCaptureIOSStartNFC: (RCTPromiseResolveBlock)resolve
+                  idCaptureIOSStartNFC: (NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
 

@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import type { ValueOf } from '../utils/types';
+import type { NviModel, ValueOf } from '../utils/types';
 import { WrongPlatformError } from '../utils';
 
 export type IDSideType = {
@@ -43,12 +43,12 @@ export class IDCaptureHelper {
    * @throws {WrongPlatformError}
    * @returns {Promise<boolean>} if the capture is success or not.
    */
-  public startNFCCaptureOnIOS(): Promise<boolean> {
+  public startNFCCaptureOnIOS(nvi: NviModel): Promise<boolean> {
     if (Platform.OS !== 'ios') {
       throw new WrongPlatformError('startNFCCaptureOnIOS()', 'iOS');
     }
 
-    return this.platformModule.startNFCCaptureOnIOS();
+    return this.platformModule.idCaptureIOSStartNFC(nvi);
   }
 
   /**

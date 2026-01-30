@@ -114,9 +114,14 @@ class AmaniSdk: RCTEventEmitter {
   }
 
   @objc
-  public func idCaptureIOSStartNFC(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  public func idCaptureIOSStartNFC(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let nvi: NviModel = convertParamsTo(params: params) else {
+        reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
+        return
+    }
+    
     if #available(iOS 13, *) {
-      IdCaptureModule().startNFC(resolve: resolve, rejecter: reject)
+      IdCaptureModule().startNFC(nvi: nvi, resolve: resolve, rejecter: reject)
     } else {
       reject("RNAmani-IdCapture", "NFC is only available after iOS 13 or newer", nil)
     }

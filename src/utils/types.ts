@@ -102,3 +102,9 @@ export type DelegateEvents = {
   onProfileStatus: (body: Record<string, any>) => void;
   onStepModel: (body: Record<string, any>) => void;
 };
+
+export type NviModel = {
+  documentNo: string;
+  birthDate: string;
+  expireDate: string;
+};

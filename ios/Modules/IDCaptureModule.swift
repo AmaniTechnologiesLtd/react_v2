@@ -35,10 +35,14 @@ class IdCaptureModule {
   }
   
   @available(iOS 13, *)
-  public func startNFC(resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
-    
-    module.startNFC { done in
-      resolve(done)
+  public func startNFC(nvi: NviModel, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    Task {
+      do {
+        let done = try await module.startNFC(nvi: nvi)
+        resolve(done)
+      } catch {
+         reject("AmaniSDK-IdCapture", error.localizedDescription, nil)
+      }
     }
   }
   

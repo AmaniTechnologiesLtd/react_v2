@@ -12,36 +12,22 @@ class NFCModule {
   private var moduleView: SDKView!
 
   func start(imageData: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    module.start(imageBase64: imageData) { _ in
-      resolve(true)
-    }
+     reject("NFCModule", "start(imageData) is not supported in this version", nil)
   }
 
   func start(nviData: NviModel, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    do {
-      try module.start(nviData: nviData) { _ in
+    Task {
+      do {
+        try await module.start(nviData: nviData)
         resolve(true)
+      } catch let err {
+        reject("ModuleError", err.localizedDescription, nil)
       }
-
-    } catch let err {
-      reject("ModuleError", err.localizedDescription, nil)
     }
   }
 
   func start(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    let vc = UIApplication.shared.windows.last?.rootViewController
-
-    let view = module.start { _ in
-      resolve(true)
-      DispatchQueue.main.async {
-        self.moduleView.removeFromSuperview()
-      }
-    }
-
-    DispatchQueue.main.async {
-      self.moduleView = SDKView(sdkView: view!)
-      self.moduleView.start(on: vc!)
-    }
+    reject("NFCModule", "start() is not supported in this version. Use start(nviData)", nil)
   }
 
   func setType(type: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
