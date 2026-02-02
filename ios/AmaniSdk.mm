@@ -12,6 +12,24 @@ RCT_EXTERN_METHOD(
                   getCustomerInfo: (RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
+  
+// MARK: DocumentCapture
+RCT_EXTERN_METHOD(
+                  documentCaptureStart: (NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
+
+RCT_EXTERN_METHOD(
+                  documentCaptureSetType: (NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
+
+RCT_EXTERN_METHOD(
+                  documentCaptureUpload:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
 
 // MARK: IDCapture
 RCT_EXTERN_METHOD(
@@ -32,7 +50,13 @@ RCT_EXTERN_METHOD(
                   )
 
 RCT_EXTERN_METHOD(
-                  idCaptureIOSStartNFC: (RCTPromiseResolveBlock)resolve
+                  idCaptureGetMRZ:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject
+                  )
+
+RCT_EXTERN_METHOD(
+                  idCaptureIOSStartNFC: (NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
 
@@ -84,25 +108,19 @@ RCT_EXTERN_METHOD(poseEstimationUpload: (RCTPromiseResolveBlock)resolve
 // MARK: NFC
 RCT_EXTERN_METHOD(startIOSNFCCaptureWithBase64Image:(NSString *)imageData
                   resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseResolveBlock)reject
+                  rejecter:(RCTPromiseRejectBlock)reject
                   )
 
 RCT_EXTERN_METHOD(startIOSNFCCaptureWithNVIModel:(NSDictionary *)params
                   resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseResolveBlock)reject
-                  )
-
-RCT_EXTERN_METHOD(startIOSNFCCaptureWithMRZCapture: (RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
 
-RCT_EXTERN_METHOD(IOSNFCCaptureSetType: (NSDictionary *)params
-                  resolver:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(startIOSNFCCaptureWithMRZCapture:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
 
-RCT_EXTERN_METHOD(IOSNFCCaptureUpload: (NSDictionary *)params
-                  resolver:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(IOSNFCCaptureUpload:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject
                   )
 

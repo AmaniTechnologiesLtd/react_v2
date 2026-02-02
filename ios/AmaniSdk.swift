@@ -38,6 +38,7 @@ class AmaniSdk: RCTEventEmitter {
 
     let customerReq = CustomerRequestModel(name: params.name ?? "", email: params.email ?? "", phone: params.phone ?? "", idCardNumber: params.idCardNumber)
     Amani.sharedInstance.setDelegate(delegate: self)
+    Amani.sharedInstance.setMRZDelegate(delegate: self)
     Amani.sharedInstance.initAmani(server: params.server, token: params.customerToken, customer: customerReq, uploadSource: source, apiVersion: apiVersion) { customerRes, err in
       if customerRes != nil {
         resolve(true)
@@ -114,12 +115,53 @@ class AmaniSdk: RCTEventEmitter {
   }
 
   @objc
-  public func idCaptureIOSStartNFC(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  public func idCaptureGetMRZ(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let idCapture = IdCaptureModule()
+    idCapture.getMrz(resolve: resolve, rejecter: reject)
+  }
+
+  @objc
+  public func idCaptureIOSStartNFC(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let nvi: NviModel = convertParamsTo(params: params) else {
+        reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
+        return
+    }
+    
     if #available(iOS 13, *) {
-      IdCaptureModule().startNFC(resolve: resolve, rejecter: reject)
+      IdCaptureModule().startNFC(nvi: nvi, resolve: resolve, rejecter: reject)
     } else {
       reject("RNAmani-IdCapture", "NFC is only available after iOS 13 or newer", nil)
     }
+  }
+  
+    // MARK: Documentcapture
+  
+  @objc
+  public func documentCaptureStart(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let params: IdCaptureParams = convertParamsTo(params: params) else {
+      reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
+      return
+    }
+    let documentCapture = DocumentCaptureModule()
+    DispatchQueue.main.async {
+      documentCapture.start(stepID: params.stepId ?? 0, resolve: resolve, rejecter: reject)
+    }
+  }
+  
+  @objc
+  public func documentCaptureSetType(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let params: SetTypeParams = convertParamsTo(params: params) else {
+      reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
+      return
+    }
+    let documentCapture = DocumentCaptureModule()
+    documentCapture.setType(type: params.type, resolve: resolve, rejecter: reject)
+  }
+  
+  @objc
+  public func documentCaptureUpload(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let documentCapture = DocumentCaptureModule()
+    documentCapture.upload(resolve: resolve, rejecter: reject)
   }
 
   // MARK: Selfie
@@ -288,7 +330,7 @@ class AmaniSdk: RCTEventEmitter {
   }
 
   override func supportedEvents() -> [String]! {
-    return ["onError", "profileStatus", "stepResult"]
+    return ["onError", "profileStatus", "stepResult", "onMRZCaptured"]
   }
 }
 
@@ -345,6 +387,25 @@ extension AmaniSdk: AmaniDelegate {
         "errors": errorBody as Any,
       ].toJSONString()
       sendEvent(withName: "onError", body: responseBody)
+    }
+  }
+}
+
+extension AmaniSdk: mrzInfoDelegate {
+  func mrzInfo(_ mrz: AmaniSDK.MrzModel?, documentId: String?) {
+    guard let mrz = mrz else { return }
+    do {
+      let jsonData = try JSONEncoder().encode(mrz)
+      sendEvent(withName: "onMRZCaptured", body: String(data: jsonData, encoding: .utf8))
+    } catch {
+      let errorResponseBody = [
+        "type": "JSONConversation",
+        "errors": [
+          "error_code": "50011",
+          "error_message": "\(error.localizedDescription)"
+        ],
+      ].toJSONString()
+      sendEvent(withName: "onError", body: errorResponseBody)
     }
   }
 }

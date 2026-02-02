@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import type { ValueOf } from '../utils/types';
+import type { NviModel, ValueOf } from '../utils/types';
 import { WrongPlatformError } from '../utils';
 
 export type IDSideType = {
@@ -43,12 +43,12 @@ export class IDCaptureHelper {
    * @throws {WrongPlatformError}
    * @returns {Promise<boolean>} if the capture is success or not.
    */
-  public startNFCCaptureOnIOS(): Promise<boolean> {
+  public startNFCCaptureOnIOS(nvi: NviModel): Promise<boolean> {
     if (Platform.OS !== 'ios') {
       throw new WrongPlatformError('startNFCCaptureOnIOS()', 'iOS');
     }
 
-    return this.platformModule.startNFCCaptureOnIOS();
+    return this.platformModule.idCaptureIOSStartNFC(nvi);
   }
 
   /**
@@ -85,7 +85,16 @@ export class IDCaptureHelper {
    */
   public async start(side: ValueOf<IDSideType>): Promise<string> {
     console.log(side);
-    let imageData = await this.platformModule.idCaptureStart({ side });
+    let imageData = await this.platformModule.idCaptureStart({ stepId: side });
     return `data:image/jpeg;base64,${imageData}`;
+  }
+
+  /**
+   * Gets the MRZ document ID from the backend.
+   * This should be called after document upload.
+   * @returns {Promise<string>} The document ID.
+   */
+  public getMRZ(): Promise<string> {
+    return this.platformModule.idCaptureGetMRZ();
   }
 }

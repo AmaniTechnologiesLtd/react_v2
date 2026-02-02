@@ -1,15 +1,15 @@
-//
-//  IDCaptureModule.swift
-//  react-native-amani-sdk
-//
-//  Created by Deniz Can on 18.09.2023.
-//
+  //
+  //  IDCaptureModule.swift
+  //  react-native-amani-sdk
+  //
+  //  Created by Deniz Can on 18.09.2023.
+  //
 
 import Foundation
 import React
 import AmaniSDK
 
-class IdCaptureModule {
+class DocumentCaptureModule {
   private let module = Amani.sharedInstance.IdCapture()
   private var moduleView: SDKView!
   
@@ -30,19 +30,7 @@ class IdCaptureModule {
       }
       
     } catch let err {
-      reject("AmaniSDK-IdCapture", err.localizedDescription, nil)
-    }
-  }
-  
-  @available(iOS 13, *)
-  public func startNFC(nvi: NviModel, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    Task {
-      do {
-        let done = try await module.startNFC(nvi: nvi)
-        resolve(done)
-      } catch {
-         reject("AmaniSDK-IdCapture", error.localizedDescription, nil)
-      }
+      reject("AmaniSDK-DocumentCapture", err.localizedDescription, nil)
     }
   }
   
@@ -56,11 +44,6 @@ class IdCaptureModule {
       resolve(isSuccess)
     }
   }
-
-  public func getMrz(resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    module.getMrz { (documentID) in
-      resolve(documentID)
-    }
-  }
+  
 }
 
