@@ -85,7 +85,16 @@ export class IDCaptureHelper {
    */
   public async start(side: ValueOf<IDSideType>): Promise<string> {
     console.log(side);
-    let imageData = await this.platformModule.idCaptureStart({ side });
+    let imageData = await this.platformModule.idCaptureStart({ stepId: side });
     return `data:image/jpeg;base64,${imageData}`;
+  }
+
+  /**
+   * Gets the MRZ document ID from the backend.
+   * This should be called after document upload.
+   * @returns {Promise<string>} The document ID.
+   */
+  public getMRZ(): Promise<string> {
+    return this.platformModule.idCaptureGetMRZ();
   }
 }

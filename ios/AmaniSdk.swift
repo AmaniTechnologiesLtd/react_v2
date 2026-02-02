@@ -38,6 +38,7 @@ class AmaniSdk: RCTEventEmitter {
 
     let customerReq = CustomerRequestModel(name: params.name ?? "", email: params.email ?? "", phone: params.phone ?? "", idCardNumber: params.idCardNumber)
     Amani.sharedInstance.setDelegate(delegate: self)
+    Amani.sharedInstance.setMRZDelegate(delegate: self)
     Amani.sharedInstance.initAmani(server: params.server, token: params.customerToken, customer: customerReq, uploadSource: source, apiVersion: apiVersion) { customerRes, err in
       if customerRes != nil {
         resolve(true)
@@ -111,6 +112,12 @@ class AmaniSdk: RCTEventEmitter {
   public func idCaptureUpload(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     let idCapture = IdCaptureModule()
     idCapture.upload(resolve: resolve, rejecter: reject)
+  }
+
+  @objc
+  public func idCaptureGetMRZ(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let idCapture = IdCaptureModule()
+    idCapture.getMrz(resolve: resolve, rejecter: reject)
   }
 
   @objc
@@ -323,7 +330,7 @@ class AmaniSdk: RCTEventEmitter {
   }
 
   override func supportedEvents() -> [String]! {
-    return ["onError", "profileStatus", "stepResult"]
+    return ["onError", "profileStatus", "stepResult", "onMRZCaptured"]
   }
 }
 
@@ -380,6 +387,25 @@ extension AmaniSdk: AmaniDelegate {
         "errors": errorBody as Any,
       ].toJSONString()
       sendEvent(withName: "onError", body: responseBody)
+    }
+  }
+}
+
+extension AmaniSdk: mrzInfoDelegate {
+  func mrzInfo(_ mrz: AmaniSDK.MrzModel?, documentId: String?) {
+    guard let mrz = mrz else { return }
+    do {
+      let jsonData = try JSONEncoder().encode(mrz)
+      sendEvent(withName: "onMRZCaptured", body: String(data: jsonData, encoding: .utf8))
+    } catch {
+      let errorResponseBody = [
+        "type": "JSONConversation",
+        "errors": [
+          "error_code": "50011",
+          "error_message": "\(error.localizedDescription)"
+        ],
+      ].toJSONString()
+      sendEvent(withName: "onError", body: errorResponseBody)
     }
   }
 }

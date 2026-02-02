@@ -56,6 +56,11 @@ class IdCaptureModule {
       resolve(isSuccess)
     }
   }
-  
+
+  public func getMrz(resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    module.getMrz { (documentID) in
+      resolve(documentID)
+    }
+  }
 }
 

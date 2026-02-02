@@ -101,6 +101,7 @@ export type DelegateEvents = {
   onError: (type: String, body: Record<string, any>) => void;
   onProfileStatus: (body: Record<string, any>) => void;
   onStepModel: (body: Record<string, any>) => void;
+  onMRZCaptured: (body: NviModel) => void;
 };
 
 export type NviModel = {
