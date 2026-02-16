@@ -48,6 +48,7 @@ export class IDCaptureHelper {
       throw new WrongPlatformError('startNFCCaptureOnIOS()', 'iOS');
     }
 
+    console.log("startNFCCaptureOnIOS (SRC TS) called with:", nvi);
     return this.platformModule.idCaptureIOSStartNFC(nvi);
   }
 

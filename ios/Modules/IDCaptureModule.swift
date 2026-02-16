@@ -36,9 +36,11 @@ class IdCaptureModule {
   
   @available(iOS 13, *)
   public func startNFC(nvi: NviModel, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    Task {
+    Task { @MainActor in
       do {
-        let done = try await module.startNFC(nvi: nvi)
+        print("Debugging NVI in Swift: DocumentNo: \(String(describing: nvi.documentNo)) Birth: \(String(describing: nvi.dateOfBirth)) Expire: \(String(describing: nvi.dateOfExpire))")
+        print("Debugging NVI CDs: DocCD: \(String(describing: nvi.documentNoCD)) BirthCD: \(String(describing: nvi.dateOfBirthCD)) ExpireCD: \(String(describing: nvi.dateOfExpireCD))")
+        let done = await module.startNFC(nvi: nvi)
         resolve(done)
       } catch {
          reject("AmaniSDK-IdCapture", error.localizedDescription, nil)
