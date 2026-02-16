@@ -122,9 +122,20 @@ class AmaniSdk: RCTEventEmitter {
 
   @objc
   public func idCaptureIOSStartNFC(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    guard let nvi: NviModel = convertParamsTo(params: params) else {
+    guard var nvi: NviModel = convertParamsTo(params: params) else {
         reject("RNAmani-Converter", "Failed to convert parameters to required type", nil)
         return
+    }
+    
+    // Manual mapping for Check Digits as CodingKeys might be missing or mismatched
+    if let paramsDict = params as? [String: Any] {
+        if let docCD = paramsDict["documentNoCD"] as? String { nvi.documentNoCD = docCD }
+        if let birthCD = paramsDict["birthDateCD"] as? String { nvi.dateOfBirthCD = birthCD }
+        if let expireCD = paramsDict["expireDateCD"] as? String { nvi.dateOfExpireCD = expireCD }
+        // Attempt uppercase keys if lowercase fail (fallback)
+        if nvi.documentNoCD == nil, let docCD = paramsDict["documentNoCd"] as? String { nvi.documentNoCD = docCD }
+        if nvi.dateOfBirthCD == nil, let birthCD = paramsDict["dateOfBirthCd"] as? String { nvi.dateOfBirthCD = birthCD }
+        if nvi.dateOfExpireCD == nil, let expireCD = paramsDict["dateOfExpireCd"] as? String { nvi.dateOfExpireCD = expireCD }
     }
     
     if #available(iOS 13, *) {
