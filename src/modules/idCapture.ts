@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import type { NviModel, ValueOf } from '../utils/types';
 import { WrongPlatformError } from '../utils';
+import { generateNviData } from '../utils/mrz';
 
 export type IDSideType = {
   front: number;
@@ -53,6 +54,26 @@ export class IDCaptureHelper {
   }
 
   /**
+   * Starts the NFC capture process using raw data.
+   * Internal MRZ check digits are calculated automatically.
+   *
+   * **Note:** this function runs only on iOS 13.0 or later.
+   * @platform iOS 13.0 later.
+   * @param docNo The ID's document number.
+   * @param birthDate The ID holder's date of birth (YYMMDD).
+   * @param expiryDate The ID's expiry date (YYMMDD).
+   * @returns {Promise<boolean>} if the capture is success or not.
+   */
+  public startNFCCaptureWithRawData(
+    docNo: string,
+    birthDate: string,
+    expiryDate: string
+  ): Promise<boolean> {
+    const nvi = generateNviData(docNo, birthDate, expiryDate);
+    return this.startNFCCaptureOnIOS(nvi);
+  }
+
+  /**
    * Sets the idWithNFC flag on NFCCaptureModule
    *
    * **Note:** see the documentation for the full usage
@@ -86,7 +107,8 @@ export class IDCaptureHelper {
    */
   public async start(side: ValueOf<IDSideType>): Promise<string> {
     console.log(side);
-    let imageData = await this.platformModule.idCaptureStart({ stepId: side });
+    // Fixed: Native module expects 'side' key, not 'stepId'
+    let imageData = await this.platformModule.idCaptureStart({ side: side });
     return `data:image/jpeg;base64,${imageData}`;
   }
 
