@@ -64,7 +64,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
       promise.reject("400002", "One of the required parameters are missing")
       return
     }
-    val activity = currentActivity
+    val activity = reactApplicationContext.currentActivity
     if (activity == null) {
       promise.reject("400003", "Tried to initialize while activity is not ready")
       return
@@ -164,7 +164,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun idCaptureStart(params: ReadableMap, promise: Promise) {
     val stepId = params.getInt("side")
-    IdCapture.instance.start(stepId, (currentActivity as ReactActivity), promise)
+    IdCapture.instance.start(stepId, (reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -175,7 +175,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun idCaptureUpload(promise: Promise) {
-    IdCapture.instance.upload((currentActivity as ReactActivity), promise)
+    IdCapture.instance.upload((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -187,7 +187,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun selfieStart(promise: Promise) {
-    Selfie.instance.start(0, (currentActivity as ReactActivity), promise)
+    Selfie.instance.start(0, (reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -198,7 +198,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun selfieUpload(promise: Promise) {
-    Selfie.instance.upload((currentActivity as ReactActivity), promise)
+    Selfie.instance.upload((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -207,7 +207,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
     val settingsJson = gson.toJson(params.toHashMap())
     val autoSelfieSettings = settingsJson.toObject<AutoSelfieSettings>()
     AutoSelfie.instance.setSettings(autoSelfieSettings)
-    AutoSelfie.instance.start((currentActivity as ReactActivity), promise)
+    AutoSelfie.instance.start((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -218,7 +218,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun autoSelfieUpload(promise: Promise) {
-    AutoSelfie.instance.upload((currentActivity as ReactActivity), promise)
+    AutoSelfie.instance.upload((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -226,7 +226,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
     val settingsJson = Gson().toJson(params.toHashMap())
     val poseEstimationSettings = settingsJson.toObject<PoseEstimationSettings>()
     PoseEstimation.instance.setSettings(poseEstimationSettings)
-    PoseEstimation.instance.start((currentActivity as ReactActivity), promise)
+    PoseEstimation.instance.start((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -237,7 +237,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun poseEstimationUpload(promise: Promise) {
-    PoseEstimation.instance.upload((currentActivity as ReactActivity), promise)
+    PoseEstimation.instance.upload((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -250,14 +250,14 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
       birthDate,
       expireDate,
       documentNo,
-      (currentActivity as ReactActivity),
+      (reactApplicationContext.currentActivity as ReactActivity),
       promise
     )
   }
 
   @ReactMethod
   fun androidDisableNFC(promise: Promise) {
-    NFC.instance.disableNFC((currentActivity as ReactActivity), promise)
+    NFC.instance.disableNFC((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
@@ -270,7 +270,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
   fun documentCaptureStart(params: ReadableMap, promise: Promise) {
     val docCount = params.getInt("documentCount")
     DocumentCapture.instance.start(
-      activity = currentActivity as ReactActivity,
+      activity = reactApplicationContext.currentActivity as ReactActivity,
       promise = promise
     )
   }
@@ -284,7 +284,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun documentCaptureUpload(promise: Promise) {
-    DocumentCapture.instance.upload((currentActivity as ReactActivity), promise)
+    DocumentCapture.instance.upload((reactApplicationContext.currentActivity as ReactActivity), promise)
   }
 
   @ReactMethod
