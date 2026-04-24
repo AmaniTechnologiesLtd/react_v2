@@ -7,6 +7,7 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
 import java.lang.Exception
 import kotlin.reflect.KFunction2
+import com.facebook.react.bridge.UiThreadUtil
 
 class NFC {
 
@@ -63,29 +64,47 @@ class NFC {
       promise.reject("NFC_NOT_AVAILABLE", "NFC is not available on this device")
       return
     }
-    promise.resolve(null)
-    nfcAdapter!!.enableReaderMode(activity, { nfcTag ->
-      nfcModule.start(nfcTag, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) { _, isSuccess, exception ->
-        if (exception.isNullOrEmpty()) {
-          val params = WritableNativeMap()
-          params.putBoolean("status", isSuccess)
-          this.sendEventFn?.invoke("android#onNFCComplete", params)
-        } else {
-          val params = WritableNativeMap()
-          params.putString("error", exception)
-          this.sendEventFn?.invoke("android#onNFCError", params)
-        }
+    UiThreadUtil.runOnUiThread {
+      try {
+        nfcAdapter!!.enableReaderMode(
+          activity,
+          { nfcTag ->
+            nfcModule.start(nfcTag, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) { _, isSuccess, exception ->
+              if (exception.isNullOrEmpty()) {
+                val params = WritableNativeMap()
+                params.putBoolean("status", isSuccess)
+                this.sendEventFn?.invoke("android#onNFCComplete", params)
+              } else {
+                val params = WritableNativeMap()
+                params.putString("error", exception)
+                this.sendEventFn?.invoke("android#onNFCError", params)
+              }
+            }
+          },
+          NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_NFC_B,
+          null
+        )
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("NFC_ERROR", "Failed to enable NFC reader: ${e.message}", e)
       }
-    }, NfcAdapter.FLAG_READER_NFC_A, null)
+    }
   }
 
   fun disableNFC(activity: ReactActivity, promise: Promise) {
-    // Start hasn't been called yet, resolve the promise regardless
     if (nfcAdapter == null) {
       promise.resolve(null)
     } else {
-      nfcAdapter!!.disableReaderMode(activity)
-      promise.resolve(null)
+      UiThreadUtil.runOnUiThread {
+        try {
+          nfcAdapter!!.disableReaderMode(activity)
+        } catch (e: Exception) {
+          // ignore
+        } finally {
+          nfcAdapter = null
+          promise.resolve(null)
+        }
+      }
     }
   }
 
