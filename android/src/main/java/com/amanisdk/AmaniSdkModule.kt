@@ -242,8 +242,8 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun androidStartNFC(params: ReadableMap, promise: Promise) {
-    val birthDate = params.getString("birthDate")
-    val expireDate = params.getString("expireDate")
+    val birthDate = params.getString("dateOfBirth")
+    val expireDate = params.getString("dateOfExpire")
     val documentNo = params.getString("documentNo")
     NFC.instance.setSendEvent(this::sendEventMap)
     NFC.instance.start(
