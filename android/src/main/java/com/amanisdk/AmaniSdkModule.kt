@@ -261,6 +261,11 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun androidUploadNFC(promise: Promise) {
+    NFC.instance.upload((reactApplicationContext.currentActivity as ReactActivity), promise)
+  }
+
+  @ReactMethod
   fun androidNFCSetType(params: ReadableMap, promise: Promise) {
     val type = params.getString("type")!!
     NFC.instance.setType(type, promise)

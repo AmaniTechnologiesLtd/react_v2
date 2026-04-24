@@ -7,10 +7,11 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
 import java.lang.Exception
 import kotlin.reflect.KFunction2
+import com.facebook.react.bridge.UiThreadUtil
 
 class NFC {
 
-  private val nfcModule = Amani.sharedInstance().ScanNFC()
+  private val nfcModule by lazy { Amani.sharedInstance().ScanNFC() }
   private var docType: String = "XXX_NF_0"
   private var nfcAdapter: NfcAdapter? = null
   private var birthDate: String? = null
@@ -63,29 +64,57 @@ class NFC {
       promise.reject("NFC_NOT_AVAILABLE", "NFC is not available on this device")
       return
     }
+    // Resolve immediately so JSI is satisfied and JS can attach event listeners.
+    // enableReaderMode must run on the main thread, so post it separately.
     promise.resolve(null)
-    nfcAdapter!!.enableReaderMode(activity, { nfcTag ->
-      nfcModule.start(nfcTag, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) { _, isSuccess, exception ->
-        if (exception.isNullOrEmpty()) {
-          val params = WritableNativeMap()
-          params.putBoolean("status", isSuccess)
-          this.sendEventFn?.invoke("android#onNFCComplete", params)
-        } else {
-          val params = WritableNativeMap()
-          params.putString("error", exception)
-          this.sendEventFn?.invoke("android#onNFCError", params)
-        }
+    UiThreadUtil.runOnUiThread {
+      try {
+        nfcAdapter!!.enableReaderMode(
+          activity,
+          { nfcTag ->
+            try {
+              nfcModule.start(nfcTag, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) { _, isSuccess, exception ->
+                if (exception.isNullOrEmpty()) {
+                  val params = WritableNativeMap()
+                  params.putBoolean("status", isSuccess)
+                  this.sendEventFn?.invoke("android#onNFCComplete", params)
+                } else {
+                  val params = WritableNativeMap()
+                  params.putString("error", exception)
+                  this.sendEventFn?.invoke("android#onNFCError", params)
+                }
+              }
+            } catch (e: Exception) {
+              val params = WritableNativeMap()
+              params.putString("error", e.message ?: "NFC read error")
+              this.sendEventFn?.invoke("android#onNFCError", params)
+            }
+          },
+          NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_NFC_B,
+          null
+        )
+      } catch (e: Exception) {
+        val params = WritableNativeMap()
+        params.putString("error", "Failed to enable NFC reader: ${e.message}")
+        this.sendEventFn?.invoke("android#onNFCError", params)
       }
-    }, NfcAdapter.FLAG_READER_NFC_A, null)
+    }
   }
 
   fun disableNFC(activity: ReactActivity, promise: Promise) {
-    // Start hasn't been called yet, resolve the promise regardless
     if (nfcAdapter == null) {
       promise.resolve(null)
     } else {
-      nfcAdapter!!.disableReaderMode(activity)
-      promise.resolve(null)
+      UiThreadUtil.runOnUiThread {
+        try {
+          nfcAdapter!!.disableReaderMode(activity)
+        } catch (e: Exception) {
+          // ignore
+        } finally {
+          nfcAdapter = null
+          promise.resolve(null)
+        }
+      }
     }
   }
 

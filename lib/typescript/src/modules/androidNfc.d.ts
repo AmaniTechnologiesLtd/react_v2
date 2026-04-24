@@ -18,6 +18,7 @@ export declare class AndroidNFC {
      * @returns
      */
     stopNFCListener(): any;
+    setType(type: string): any;
     uploadNFC(): any;
 }
 //# sourceMappingURL=androidNfc.d.ts.map

@@ -50,6 +50,10 @@ export class AndroidNFC {
     return this.platformModule.androidDisableNFC();
   }
 
+  public setType(type: string) {
+    return this.platformModule.androidNFCSetType({ type });
+  }
+
   public uploadNFC() {
     return this.platformModule.androidUploadNFC();
   }
