@@ -1,11 +1,7 @@
 package com.amanisdk.modules
 
 import ai.amani.sdk.Amani
-import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.content.Intent
 import android.nfc.NfcAdapter
-import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
@@ -21,8 +17,6 @@ class NFC {
   private var expireDate: String? = null
   private var documentNo: String? = null
 
-  private val FLAG_MUTABLE = 1 shl 25
-  private val VERSION_CODES_S = 31
   private var sendEventFn: (KFunction2<String, WritableNativeMap, Unit>)? = null
   companion object {
     val instance = NFC()
@@ -60,41 +54,29 @@ class NFC {
   }
 
 
-  @SuppressLint("WrongConstant")
   fun startNFC(
     activity: ReactActivity,
     promise: Promise
   ) {
     nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
-    if (nfcAdapter != null) {
-      val intent = Intent(activity, this.javaClass)
-      intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-      val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        PendingIntent.getActivity(activity, 0, Intent(activity, javaClass)
-          .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), FLAG_MUTABLE)
-      } else{
-        PendingIntent.getActivity(activity, 0, Intent(activity, javaClass)
-          .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0)
-      }
-      val filter = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
-      nfcAdapter!!.enableForegroundDispatch(activity, pendingIntent, null, filter)
-      promise.resolve(null)
-      nfcAdapter!!.enableReaderMode(activity, {
-        nfcModule.start(it, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) {_, isSuccess, exception ->
-          if(exception.isNullOrEmpty()) {
-            val params = WritableNativeMap()
-            params.putBoolean("status", isSuccess)
-//            sendEvent(activity.applicationContext as ReactApplicationContext, "android#onNFCComplete", params)
-            this.sendEventFn?.invoke("android#onNFCComplete", params)
-          } else {
-            val params = WritableNativeMap()
-            params.putString("error", exception)
-            this.sendEventFn?.invoke("android#onNFCError", params)
-//            sendEvent(activity.applicationContext as ReactApplicationContext, "android#onNFCError", params)
-          }
-        }
-      }, NfcAdapter.FLAG_READER_NFC_A, null)
+    if (nfcAdapter == null) {
+      promise.reject("NFC_NOT_AVAILABLE", "NFC is not available on this device")
+      return
     }
+    promise.resolve(null)
+    nfcAdapter!!.enableReaderMode(activity, { nfcTag ->
+      nfcModule.start(nfcTag, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) { _, isSuccess, exception ->
+        if (exception.isNullOrEmpty()) {
+          val params = WritableNativeMap()
+          params.putBoolean("status", isSuccess)
+          this.sendEventFn?.invoke("android#onNFCComplete", params)
+        } else {
+          val params = WritableNativeMap()
+          params.putString("error", exception)
+          this.sendEventFn?.invoke("android#onNFCError", params)
+        }
+      }
+    }, NfcAdapter.FLAG_READER_NFC_A, null)
   }
 
   fun disableNFC(activity: ReactActivity, promise: Promise) {
