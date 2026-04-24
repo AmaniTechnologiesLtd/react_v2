@@ -74,10 +74,6 @@ class NFC {
           { nfcTag ->
             try {
               nfcModule.start(nfcTag, activity, this.birthDate!!, this.expireDate!!, this.documentNo!!) { _, isSuccess, exception ->
-                UiThreadUtil.runOnUiThread {
-                  try { nfcAdapter?.disableReaderMode(activity) } catch (e: Exception) { }
-                  nfcAdapter = null
-                }
                 if (exception.isNullOrEmpty()) {
                   val params = WritableNativeMap()
                   params.putBoolean("status", isSuccess)
