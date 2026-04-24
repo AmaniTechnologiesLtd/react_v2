@@ -2,6 +2,7 @@ import { IDCaptureHelper, SelfieHelper, AutoSelfieHelper, PoseEstimationHelper }
 import { AndroidNFC } from './modules/androidNfc';
 import { IOSNFC } from './modules/iosNfc';
 import { type DelegateEvents, type InitAmaniParams } from './utils/types';
+import { DocumentCaptureHelper } from './modules/documentCapture';
 export declare class AmaniSDK {
     private static _instance;
     private _isInitialized;
@@ -40,6 +41,10 @@ export declare class AmaniSDK {
      * as NFC Document for android.
      */
     get androidNFCCapture(): AndroidNFC;
+    /**
+     * Utility class to capture document
+     */
+    get documentCapture(): DocumentCaptureHelper;
     /**
      * Property to check before using any native components.
      *
