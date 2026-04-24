@@ -11,7 +11,7 @@ import com.facebook.react.bridge.UiThreadUtil
 
 class NFC {
 
-  private val nfcModule get() = Amani.sharedInstance().ScanNFC()
+  private val nfcModule by lazy { Amani.sharedInstance().ScanNFC() }
   private var docType: String = "XXX_NF_0"
   private var nfcAdapter: NfcAdapter? = null
   private var birthDate: String? = null
