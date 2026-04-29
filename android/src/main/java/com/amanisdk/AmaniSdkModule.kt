@@ -72,6 +72,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
 
     UiThreadUtil.runOnUiThread {
       Amani.init(activity, server, sharedSecret)
+      NFC.instance.serverUrl = server ?: ""
       Amani.sharedInstance().AmaniEvent().setListener(object : AmaniEventCallBack {
         override fun onError(type: String?, error: ArrayList<AmaniError?>?) {
           if (error != null) {

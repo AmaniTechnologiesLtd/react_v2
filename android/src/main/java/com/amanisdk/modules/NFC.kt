@@ -1,13 +1,21 @@
 package com.amanisdk.modules
 
 import ai.amani.sdk.Amani
+import ai.amani.base.util.SessionManager
 import android.nfc.NfcAdapter
 import androidx.fragment.app.FragmentActivity
 import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
+import java.io.IOException
 import java.lang.Exception
 import kotlin.reflect.KFunction2
 import com.facebook.react.bridge.UiThreadUtil
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
 
 class NFC {
 
@@ -18,6 +26,7 @@ class NFC {
   private var expireDate: String? = null
   private var documentNo: String? = null
 
+  var serverUrl: String = ""
   private var sendEventFn: (KFunction2<String, WritableNativeMap, Unit>)? = null
   companion object {
     val instance = NFC()
@@ -125,9 +134,49 @@ class NFC {
 
   fun upload(activity: ReactActivity, promise: Promise) {
     try {
-      nfcModule.upload(activity as FragmentActivity, docType) {
-        promise.resolve(it)
+      val mrz = SessionManager.getMrzOnlyValue()?.replace("\n", "") ?: ""
+      val nfcImage = SessionManager.getNFC() ?: ""
+      val dimensions = SessionManager.getNfcWidthAndHeight()
+      val customerId = SessionManager.getCustomerIdV2() ?: ""
+      val token = SessionManager.getToken() ?: ""
+      val height = dimensions?.getOrNull(0) ?: 0
+      val width = dimensions?.getOrNull(1) ?: 0
+
+      val photo = JSONObject().apply {
+        put("base64", nfcImage)
+        put("height", height)
+        put("width", width)
       }
+      val nfc = JSONObject().apply {
+        put("mrz", mrz)
+        put("photo", photo)
+      }
+      val body = JSONObject().apply {
+        put("type", docType)
+        put("profile", customerId)
+        put("files", JSONArray().put(nfcImage))
+        put("nfc", nfc)
+        put("cropped", true)
+        put("rotated", true)
+      }
+
+      val url = serverUrl.trimEnd('/') + "/api/v2/document"
+      val client = OkHttpClient()
+      val request = Request.Builder()
+        .url(url)
+        .addHeader("Authorization", "Bearer $token")
+        .post(body.toString().toRequestBody("application/json".toMediaType()))
+        .build()
+
+      client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+          promise.reject("NFC_UPLOAD_ERROR", e.message ?: "Upload failed")
+        }
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          promise.resolve(response.isSuccessful)
+          response.close()
+        }
+      })
     } catch (e: Exception) {
       promise.reject("400012", "Upload exception", e)
     }
