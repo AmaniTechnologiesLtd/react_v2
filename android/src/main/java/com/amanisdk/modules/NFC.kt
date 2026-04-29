@@ -142,6 +142,10 @@ class NFC {
       val height = dimensions?.getOrNull(0) ?: 0
       val width = dimensions?.getOrNull(1) ?: 0
 
+      android.util.Log.d("NFC_UPLOAD", "docType=$docType, customerId=$customerId, serverUrl=$serverUrl")
+      android.util.Log.d("NFC_UPLOAD", "mrz=${mrz.take(40)}, nfcImage=${if (nfcImage.isNotEmpty()) "len=${nfcImage.length}" else "EMPTY"}")
+      android.util.Log.d("NFC_UPLOAD", "dimensions: h=$height w=$width, token=${if (token.isNotEmpty()) "present" else "EMPTY"}")
+
       val photo = JSONObject().apply {
         put("base64", nfcImage)
         put("height", height)
@@ -161,6 +165,8 @@ class NFC {
       }
 
       val url = serverUrl.trimEnd('/') + "/api/v2/document"
+      android.util.Log.d("NFC_UPLOAD", "POST $url")
+
       val client = OkHttpClient()
       val request = Request.Builder()
         .url(url)
@@ -170,14 +176,17 @@ class NFC {
 
       client.newCall(request).enqueue(object : okhttp3.Callback {
         override fun onFailure(call: okhttp3.Call, e: IOException) {
+          android.util.Log.e("NFC_UPLOAD", "Network failure: ${e.message}")
           promise.reject("NFC_UPLOAD_ERROR", e.message ?: "Upload failed")
         }
         override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+          val responseBody = response.body?.string() ?: ""
+          android.util.Log.d("NFC_UPLOAD", "Response ${response.code}: $responseBody")
           promise.resolve(response.isSuccessful)
-          response.close()
         }
       })
     } catch (e: Exception) {
+      android.util.Log.e("NFC_UPLOAD", "Exception: ${e.message}", e)
       promise.reject("400012", "Upload exception", e)
     }
   }
