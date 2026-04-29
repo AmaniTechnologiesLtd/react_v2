@@ -10,11 +10,9 @@ import java.io.IOException
 import java.lang.Exception
 import kotlin.reflect.KFunction2
 import com.facebook.react.bridge.UiThreadUtil
-import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
 import org.json.JSONObject
 
 class NFC {
@@ -146,32 +144,33 @@ class NFC {
       android.util.Log.d("NFC_UPLOAD", "mrz=${mrz.take(40)}, nfcImage=${if (nfcImage.isNotEmpty()) "len=${nfcImage.length}" else "EMPTY"}")
       android.util.Log.d("NFC_UPLOAD", "dimensions: h=$height w=$width, token=${if (token.isNotEmpty()) "present" else "EMPTY"}")
 
-      val photo = JSONObject().apply {
-        put("base64", nfcImage)
-        put("height", height)
-        put("width", width)
-      }
-      val nfc = JSONObject().apply {
+      val nfcJson = JSONObject().apply {
         put("mrz", mrz)
-        put("photo", photo)
-      }
-      val body = JSONObject().apply {
-        put("type", docType)
-        put("profile", customerId)
-        put("files", JSONArray().put(nfcImage))
-        put("nfc", nfc)
-        put("cropped", true)
-        put("rotated", true)
+        put("photo", JSONObject().apply {
+          put("base64", nfcImage)
+          put("height", height)
+          put("width", width)
+        })
       }
 
+      val requestBody = MultipartBody.Builder()
+        .setType(MultipartBody.FORM)
+        .addFormDataPart("type", docType)
+        .addFormDataPart("profile", customerId)
+        .addFormDataPart("pages", nfcImage)
+        .addFormDataPart("nfc", nfcJson.toString())
+        .addFormDataPart("cropped", "true")
+        .addFormDataPart("rotated", "true")
+        .build()
+
       val url = serverUrl.trimEnd('/') + "/api/v2/document"
-      android.util.Log.d("NFC_UPLOAD", "POST $url")
+      android.util.Log.d("NFC_UPLOAD", "POST $url (multipart)")
 
       val client = OkHttpClient()
       val request = Request.Builder()
         .url(url)
         .addHeader("Authorization", "Bearer $token")
-        .post(body.toString().toRequestBody("application/json".toMediaType()))
+        .post(requestBody)
         .build()
 
       client.newCall(request).enqueue(object : okhttp3.Callback {
