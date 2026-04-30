@@ -1,13 +1,20 @@
 package com.amanisdk.modules
 
 import ai.amani.sdk.Amani
+import ai.amani.base.util.SessionManager
+import ai.amani.base.utility.AmaniVersion
 import android.nfc.NfcAdapter
 import androidx.fragment.app.FragmentActivity
 import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
+import java.io.IOException
 import java.lang.Exception
 import kotlin.reflect.KFunction2
 import com.facebook.react.bridge.UiThreadUtil
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 
 class NFC {
 
@@ -18,6 +25,7 @@ class NFC {
   private var expireDate: String? = null
   private var documentNo: String? = null
 
+  var serverUrl: String = ""
   private var sendEventFn: (KFunction2<String, WritableNativeMap, Unit>)? = null
   companion object {
     val instance = NFC()
@@ -125,12 +133,108 @@ class NFC {
 
   fun upload(activity: ReactActivity, promise: Promise) {
     try {
-      nfcModule.upload(activity as FragmentActivity, docType) {
-        promise.resolve(it)
+      val mrz = SessionManager.getMrzOnlyValue()?.replace("\n", "") ?: ""
+      val nfcImage = SessionManager.getNFC() ?: ""
+      val dimensions = SessionManager.getNfcWidthAndHeight()
+      val token = SessionManager.getToken() ?: ""
+      val height = dimensions?.getOrNull(0) ?: 0
+      val width = dimensions?.getOrNull(1) ?: 0
+
+      android.util.Log.d("NFC_UPLOAD", "version=${Amani.VERSION}, docType=$docType, serverUrl=$serverUrl")
+      android.util.Log.d("NFC_UPLOAD", "mrz=${mrz.take(40)}, nfcImage=${if (nfcImage.isNotEmpty()) "len=${nfcImage.length}" else "EMPTY"}")
+      android.util.Log.d("NFC_UPLOAD", "dimensions: h=$height w=$width, token=${if (token.isNotEmpty()) "present" else "EMPTY"}")
+
+      val nfcJson = JSONObject().apply {
+        put("mrz", mrz)
+        put("photo", JSONObject().apply {
+          put("base64", nfcImage)
+          put("height", height)
+          put("width", width)
+        })
+      }
+
+      if (Amani.VERSION == AmaniVersion.V1) {
+        uploadV1(promise, nfcImage, nfcJson, token)
+      } else {
+        uploadV2(promise, nfcImage, nfcJson, token)
       }
     } catch (e: Exception) {
+      android.util.Log.e("NFC_UPLOAD", "Exception: ${e.message}", e)
       promise.reject("400012", "Upload exception", e)
     }
+  }
+
+  private fun uploadV1(promise: Promise, nfcImage: String, nfcJson: JSONObject, token: String) {
+    val customerId = SessionManager.getCustomerId().toString()
+    val lang = SessionManager.getLanguage() ?: "en"
+
+    val requestBody = MultipartBody.Builder()
+      .setType(MultipartBody.FORM)
+      .addFormDataPart("type", docType)
+      .addFormDataPart("customer_id", customerId)
+      .addFormDataPart("files[]", nfcImage)
+      .addFormDataPart("nfc", nfcJson.toString())
+      .addFormDataPart("cropped", "true")
+      .addFormDataPart("attempt", "1")
+      .build()
+
+    val url = serverUrl.trimEnd('/') + "/recognition/web/upload?ln=$lang"
+    android.util.Log.d("NFC_UPLOAD", "V1 POST $url")
+
+    val client = OkHttpClient()
+    val request = Request.Builder()
+      .url(url)
+      .addHeader("Authorization", "token $token")
+      .post(requestBody)
+      .build()
+
+    client.newCall(request).enqueue(object : okhttp3.Callback {
+      override fun onFailure(call: okhttp3.Call, e: IOException) {
+        android.util.Log.e("NFC_UPLOAD", "V1 network failure: ${e.message}")
+        promise.reject("NFC_UPLOAD_ERROR", e.message ?: "Upload failed")
+      }
+      override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+        val responseBody = response.body?.string() ?: ""
+        android.util.Log.d("NFC_UPLOAD", "V1 Response ${response.code}: $responseBody")
+        promise.resolve(response.isSuccessful)
+      }
+    })
+  }
+
+  private fun uploadV2(promise: Promise, nfcImage: String, nfcJson: JSONObject, token: String) {
+    val customerId = SessionManager.getCustomerIdV2() ?: ""
+
+    val requestBody = MultipartBody.Builder()
+      .setType(MultipartBody.FORM)
+      .addFormDataPart("type", docType)
+      .addFormDataPart("profile", customerId)
+      .addFormDataPart("pages", nfcImage)
+      .addFormDataPart("nfc", nfcJson.toString())
+      .addFormDataPart("cropped", "true")
+      .addFormDataPart("rotated", "true")
+      .build()
+
+    val url = serverUrl.trimEnd('/') + "/api/v2/document"
+    android.util.Log.d("NFC_UPLOAD", "V2 POST $url")
+
+    val client = OkHttpClient()
+    val request = Request.Builder()
+      .url(url)
+      .addHeader("Authorization", "Bearer $token")
+      .post(requestBody)
+      .build()
+
+    client.newCall(request).enqueue(object : okhttp3.Callback {
+      override fun onFailure(call: okhttp3.Call, e: IOException) {
+        android.util.Log.e("NFC_UPLOAD", "V2 network failure: ${e.message}")
+        promise.reject("NFC_UPLOAD_ERROR", e.message ?: "Upload failed")
+      }
+      override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+        val responseBody = response.body?.string() ?: ""
+        android.util.Log.d("NFC_UPLOAD", "V2 Response ${response.code}: $responseBody")
+        promise.resolve(response.isSuccessful)
+      }
+    })
   }
 
 //  private fun sendEvent(
