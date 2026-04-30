@@ -178,7 +178,7 @@ class NFC {
       .addFormDataPart("attempt", "1")
       .build()
 
-    val url = serverUrl.trimEnd('/') + "/recognition/web/upload?ln=$lang"
+    val url = serverUrl.trimEnd('/') + "/api/v1/recognition/web/upload?ln=$lang"
     android.util.Log.d("NFC_UPLOAD", "V1 POST $url")
 
     val client = OkHttpClient()
