@@ -71,7 +71,7 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
     }
 
     UiThreadUtil.runOnUiThread {
-      Amani.init(activity, server, sharedSecret)
+      Amani.init(activity, server, amaniVersion)
       NFC.instance.serverUrl = server ?: ""
       Amani.sharedInstance().AmaniEvent().setListener(object : AmaniEventCallBack {
         override fun onError(type: String?, error: ArrayList<AmaniError?>?) {
@@ -101,7 +101,6 @@ class AmaniSdkModule(reactContext: ReactApplicationContext) :
         activity,
         customerIdCardNumber,
         customerToken,
-        useLocation,
         lang!!,
       ) { loggedIn ->
         promise.resolve(loggedIn)
