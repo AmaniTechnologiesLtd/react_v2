@@ -42,7 +42,7 @@ class Selfie {
       container.id = id
       activity.addContentView(container, viewParams)
 
-      frag = selfieModule.start(docType) { bitmap, _, _ ->
+      frag = selfieModule.start(docType ?: "XXX_SE_0") { bitmap, _, _ ->
         if (bitmap != null) {
           promise.resolve(bitmap.toJpegBase64String())
           activity.supportFragmentManager
