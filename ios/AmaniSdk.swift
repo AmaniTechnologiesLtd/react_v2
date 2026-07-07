@@ -36,6 +36,11 @@ class AmaniSdk: RCTEventEmitter {
       apiVersion = ApiVersions(rawValue: versionParam)!
     }
 
+    // Stopgap for the NFC upload workaround in NFCModule.swift — see RawNFCUploadConfig.swift.
+    RawNFCUploadConfig.server = params.server
+    RawNFCUploadConfig.token = params.customerToken
+    RawNFCUploadConfig.lang = params.lang ?? "en"
+
     let customerReq = CustomerRequestModel(name: params.name ?? "", email: params.email ?? "", phone: params.phone ?? "", idCardNumber: params.idCardNumber)
     Amani.sharedInstance.setDelegate(delegate: self)
     Amani.sharedInstance.setMRZDelegate(delegate: self)
