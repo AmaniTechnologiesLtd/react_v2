@@ -6,6 +6,7 @@
 //
 
 import AmaniSDK
+import UIKit
 @available(iOS 13, *)
 class NFCModule {
   private let module = Amani.sharedInstance.scanNFC()
@@ -35,9 +36,92 @@ class NFCModule {
     resolve(nil)
   }
 
+  // WORKAROUND (see RawNFCUploadConfig.swift): the native SDK's module.upload() sends
+  // `device_data` / `upload_source` fields that Android's hand-rolled upload never sends, and
+  // the backend currently returns an error for that shape on NFC documents
+  // ("Not implemented error Zeki"). This bypasses module.upload() and POSTs a minimal multipart
+  // body directly, mirroring android/.../modules/NFC.kt's uploadV1().
+  //
+  // `mrzValue` / `nfcPortraitPhoto` / `type` are `private` on ScanNFC, so we can't read them via
+  // normal property access from this module. Mirror reflects them anyway — Swift access control
+  // is compile-time only and doesn't affect runtime introspection — avoiding an AmaniSDK.xcframework
+  // rebuild. Remove this override (and RawNFCUploadConfig) once the backend fix ships.
   func upload(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    module.upload { isSuccess in
-      resolve(isSuccess)
+    var mrz: String?
+    var photo: UIImage?
+    var docType: String?
+    for child in Mirror(reflecting: module).children {
+      switch child.label {
+      case "mrzValue": mrz = child.value as? String
+      case "nfcPortraitPhoto": photo = child.value as? UIImage
+      case "type": docType = child.value as? String
+      default: break
+      }
     }
+
+    guard let mrz = mrz, let photo = photo, let jpegData = photo.jpegData(compressionQuality: 1) else {
+      reject("NFCModule", "No NFC scan data available to upload", nil)
+      return
+    }
+
+    let base64Image = "data:image/jpeg;base64,\(jpegData.base64EncodedString())"
+    let customerId = Amani.sharedInstance.customerInfo().getCustomer().id ?? ""
+    let type = docType ?? ""
+
+    let nfcPayload: [String: Any] = [
+      "mrz": mrz,
+      "photo": [
+        "base64": base64Image,
+        "height": Int(photo.size.height),
+        "width": Int(photo.size.width),
+      ],
+    ]
+
+    guard
+      let nfcJsonData = try? JSONSerialization.data(withJSONObject: nfcPayload),
+      let nfcJsonString = String(data: nfcJsonData, encoding: .utf8)
+    else {
+      reject("NFCModule", "Failed to encode NFC payload", nil)
+      return
+    }
+
+    let server = RawNFCUploadConfig.server
+    let trimmedServer = server.hasSuffix("/") ? String(server.dropLast()) : server
+    guard let url = URL(string: "\(trimmedServer)/api/v1/recognition/web/upload?ln=\(RawNFCUploadConfig.lang)") else {
+      reject("NFCModule", "Invalid server URL", nil)
+      return
+    }
+
+    let boundary = "Boundary-\(UUID().uuidString)"
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    request.setValue("token \(RawNFCUploadConfig.token)", forHTTPHeaderField: "Authorization")
+
+    var body = Data()
+    func appendField(name: String, value: String) {
+      body.append("--\(boundary)\r\n".data(using: .utf8)!)
+      body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+      body.append("\(value)\r\n".data(using: .utf8)!)
+    }
+    appendField(name: "type", value: type)
+    appendField(name: "customer_id", value: customerId)
+    appendField(name: "files[]", value: base64Image)
+    appendField(name: "nfc", value: nfcJsonString)
+    appendField(name: "cropped", value: "true")
+    appendField(name: "attempt", value: "1")
+    body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+    request.httpBody = body
+
+    URLSession.shared.dataTask(with: request) { data, response, error in
+      if let error = error {
+        reject("NFC_UPLOAD_ERROR", error.localizedDescription, error)
+        return
+      }
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+      let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "<empty>"
+      print("[RawNFCUpload] status=\(statusCode) body=\(bodyString)")
+      resolve(statusCode >= 200 && statusCode < 300)
+    }.resume()
   }
 }
