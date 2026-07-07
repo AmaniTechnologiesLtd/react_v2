@@ -40,7 +40,7 @@ class NFCModule {
   // `device_data` / `upload_source` fields that Android's hand-rolled upload never sends, and
   // the backend currently returns an error for that shape on NFC documents
   // ("Not implemented error Zeki"). This bypasses module.upload() and POSTs a minimal multipart
-  // body directly, mirroring android/.../modules/NFC.kt's uploadV1().
+  // body directly, mirroring android/.../modules/NFC.kt's uploadV1()/uploadV2().
   //
   // `mrzValue` / `nfcPortraitPhoto` / `type` are `private` on ScanNFC, so we can't read them via
   // normal property access from this module. Mirror reflects them anyway — Swift access control
@@ -87,7 +87,36 @@ class NFCModule {
 
     let server = RawNFCUploadConfig.server
     let trimmedServer = server.hasSuffix("/") ? String(server.dropLast()) : server
-    guard let url = URL(string: "\(trimmedServer)/api/v1/recognition/web/upload?ln=\(RawNFCUploadConfig.lang)") else {
+
+    let urlString: String
+    let authHeader: String
+    var fields: [(String, String)]
+
+    if RawNFCUploadConfig.apiVersion == "v1" {
+      urlString = "\(trimmedServer)/api/v1/recognition/web/upload?ln=\(RawNFCUploadConfig.lang)"
+      authHeader = "token \(RawNFCUploadConfig.token)"
+      fields = [
+        ("type", type),
+        ("customer_id", customerId),
+        ("files[]", base64Image),
+        ("nfc", nfcJsonString),
+        ("cropped", "true"),
+        ("attempt", "1"),
+      ]
+    } else {
+      urlString = "\(trimmedServer)/api/v2/document"
+      authHeader = "Bearer \(RawNFCUploadConfig.token)"
+      fields = [
+        ("type", type),
+        ("profile", customerId),
+        ("pages", base64Image),
+        ("nfc", nfcJsonString),
+        ("cropped", "true"),
+        ("rotated", "true"),
+      ]
+    }
+
+    guard let url = URL(string: urlString) else {
       reject("NFCModule", "Invalid server URL", nil)
       return
     }
@@ -96,7 +125,7 @@ class NFCModule {
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-    request.setValue("token \(RawNFCUploadConfig.token)", forHTTPHeaderField: "Authorization")
+    request.setValue(authHeader, forHTTPHeaderField: "Authorization")
 
     var body = Data()
     func appendField(name: String, value: String) {
@@ -104,12 +133,9 @@ class NFCModule {
       body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
       body.append("\(value)\r\n".data(using: .utf8)!)
     }
-    appendField(name: "type", value: type)
-    appendField(name: "customer_id", value: customerId)
-    appendField(name: "files[]", value: base64Image)
-    appendField(name: "nfc", value: nfcJsonString)
-    appendField(name: "cropped", value: "true")
-    appendField(name: "attempt", value: "1")
+    for (name, value) in fields {
+      appendField(name: name, value: value)
+    }
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)
     request.httpBody = body
 
@@ -120,7 +146,7 @@ class NFCModule {
       }
       let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
       let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "<empty>"
-      print("[RawNFCUpload] status=\(statusCode) body=\(bodyString)")
+      print("[RawNFCUpload] apiVersion=\(RawNFCUploadConfig.apiVersion) status=\(statusCode) body=\(bodyString)")
       resolve(statusCode >= 200 && statusCode < 300)
     }.resume()
   }

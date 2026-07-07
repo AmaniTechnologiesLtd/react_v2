@@ -40,6 +40,7 @@ class AmaniSdk: RCTEventEmitter {
     RawNFCUploadConfig.server = params.server
     RawNFCUploadConfig.token = params.customerToken
     RawNFCUploadConfig.lang = params.lang ?? "en"
+    RawNFCUploadConfig.apiVersion = apiVersion.rawValue
 
     let customerReq = CustomerRequestModel(name: params.name ?? "", email: params.email ?? "", phone: params.phone ?? "", idCardNumber: params.idCardNumber)
     Amani.sharedInstance.setDelegate(delegate: self)
