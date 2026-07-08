@@ -62,34 +62,31 @@ class AutoSelfieModule {
   // handle ("Not implemented error"). This bypasses module.upload() and POSTs a minimal
   // multipart body directly, same minimal field set as NFC's Android wrapper.
   //
-  // AutoSelfie is a thin wrapper: its own upload()/addDocument() just delegate straight through
-  // to PoseEstimation.sharedInstance, so the actual captured image lives in
-  // PoseEstimation.sharedInstance's private `imgSession`, not on `module` itself. `type` is read
-  // off `module` (AutoSelfie.sharedInstance) directly — AutoSelfie.start() already pushes it into
-  // PoseEstimation's config, so both stay in sync. `PoseEstimation` and its `sharedInstance` are
-  // public, but `imgSession` (and its own type, DocImage, and DocImage's `imageObj`) are not —
-  // Mirror reflects through both the same way NFCModule/SelfieModule do, since access control is
-  // compile-time only. `imageObj[0]` holds the front-step capture as a raw base64 JPEG string
-  // (steps.front.rawValue == 0), already exactly what the native upload would have sent. Remove
-  // this override (and RawUploadConfig) once the backend fix ships.
-  private func dumpImgSession(_ label: String, _ value: Any) -> String? {
-    var found: String?
-    print("[RawAutoSelfieUpload][debug] \(label) imgSession children:")
-    for child in Mirror(reflecting: value).children {
-      print("[RawAutoSelfieUpload][debug]   label=\(child.label ?? "nil") value=\(child.value)")
+  // `type` and `imgSession` are `private` on AutoSelfie (and imgSession's own type, DocImage, and
+  // its `imageObj` aren't `public` either) — none of it is reachable via normal property access
+  // from this module. Mirror reflects through both the same way NFCModule/SelfieModule do, since
+  // access control is compile-time only.
+  //
+  // The captured image's location depends on the installed SDK version: current IOS_SDK_V2 source
+  // has AutoSelfie delegate entirely to PoseEstimation.sharedInstance's own `imgSession`, but the
+  // pinned 3.4.27 binary still stores it on AutoSelfie's own `imgSession` (confirmed via runtime
+  // inspection — the source and binary have diverged). Checking AutoSelfie's own imgSession first
+  // covers the version actually shipping; PoseEstimation's is a fallback for whenever the pinned
+  // version catches up to current source. Remove this override (and RawUploadConfig) once the
+  // backend fix ships.
+  private func extractRawBase64(from imgSessionValue: Any) -> String? {
+    for child in Mirror(reflecting: imgSessionValue).children {
       if child.label == "imageObj", let imageObj = child.value as? [Int: String] {
-        found = imageObj[0]
+        return imageObj[0]
       }
     }
-    return found
+    return nil
   }
 
   public func upload(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     var docType: String?
     var autoSelfieImgSession: Any?
-    print("[RawAutoSelfieUpload][debug] module (AutoSelfie) children:")
     for child in Mirror(reflecting: module).children {
-      print("[RawAutoSelfieUpload][debug]   label=\(child.label ?? "nil") value=\(child.value)")
       if child.label == "type" {
         docType = child.value as? String
       }
@@ -98,30 +95,22 @@ class AutoSelfieModule {
       }
     }
 
-    var poseImgSession: Any?
-    var poseDocuments: Any?
-    print("[RawAutoSelfieUpload][debug] PoseEstimation.sharedInstance children:")
-    for child in Mirror(reflecting: PoseEstimation.sharedInstance).children {
-      print("[RawAutoSelfieUpload][debug]   label=\(child.label ?? "nil") value=\(child.value)")
-      if child.label == "imgSession" {
-        poseImgSession = child.value
-      }
-      if child.label == "documents" {
-        poseDocuments = child.value
-      }
-    }
-    print("[RawAutoSelfieUpload][debug] PoseEstimation.documents = \(String(describing: poseDocuments))")
-
     var rawBase64: String?
-    if let poseImgSession = poseImgSession {
-      rawBase64 = dumpImgSession("PoseEstimation", poseImgSession)
+    var foundVia = "none"
+    if let autoSelfieImgSession = autoSelfieImgSession, let found = extractRawBase64(from: autoSelfieImgSession) {
+      rawBase64 = found
+      foundVia = "AutoSelfie"
+    } else {
+      for child in Mirror(reflecting: PoseEstimation.sharedInstance).children where child.label == "imgSession" {
+        if let found = extractRawBase64(from: child.value) {
+          rawBase64 = found
+          foundVia = "PoseEstimation"
+        }
+      }
     }
-    if rawBase64 == nil, let autoSelfieImgSession = autoSelfieImgSession {
-      rawBase64 = dumpImgSession("AutoSelfie", autoSelfieImgSession)
-    }
+    print("[RawAutoSelfieUpload] image found via=\(foundVia)")
 
     guard let rawBase64 = rawBase64, let type = docType else {
-      print("[RawAutoSelfieUpload][debug] FAILED — docType=\(docType ?? "nil"), rawBase64 present=\(rawBase64 != nil)")
       reject("AutoSelfieModule", "No selfie capture data available to upload", nil)
       return
     }
