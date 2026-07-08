@@ -36,7 +36,7 @@ class NFCModule {
     resolve(nil)
   }
 
-  // WORKAROUND (see RawNFCUploadConfig.swift): the native SDK's module.upload() sends
+  // WORKAROUND (see RawUploadConfig.swift): the native SDK's module.upload() sends
   // `device_data` / `upload_source` fields that Android's hand-rolled upload never sends, and
   // the backend currently returns an error for that shape on NFC documents
   // ("Not implemented error Zeki"). This bypasses module.upload() and POSTs a minimal multipart
@@ -45,7 +45,7 @@ class NFCModule {
   // `mrzValue` / `nfcPortraitPhoto` / `type` are `private` on ScanNFC, so we can't read them via
   // normal property access from this module. Mirror reflects them anyway — Swift access control
   // is compile-time only and doesn't affect runtime introspection — avoiding an AmaniSDK.xcframework
-  // rebuild. Remove this override (and RawNFCUploadConfig) once the backend fix ships.
+  // rebuild. Remove this override (and RawUploadConfig) once the backend fix ships.
   func upload(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     var mrz: String?
     var photo: UIImage?
@@ -85,16 +85,16 @@ class NFCModule {
       return
     }
 
-    let server = RawNFCUploadConfig.server
+    let server = RawUploadConfig.server
     let trimmedServer = server.hasSuffix("/") ? String(server.dropLast()) : server
 
     let urlString: String
     let authHeader: String
     var fields: [(String, String)]
 
-    if RawNFCUploadConfig.apiVersion == "v1" {
-      urlString = "\(trimmedServer)/api/v1/recognition/web/upload?ln=\(RawNFCUploadConfig.lang)"
-      authHeader = "token \(RawNFCUploadConfig.token)"
+    if RawUploadConfig.apiVersion == "v1" {
+      urlString = "\(trimmedServer)/api/v1/recognition/web/upload?ln=\(RawUploadConfig.lang)"
+      authHeader = "token \(RawUploadConfig.token)"
       fields = [
         ("type", type),
         ("customer_id", customerId),
@@ -105,7 +105,7 @@ class NFCModule {
       ]
     } else {
       urlString = "\(trimmedServer)/api/v2/document"
-      authHeader = "Bearer \(RawNFCUploadConfig.token)"
+      authHeader = "Bearer \(RawUploadConfig.token)"
       fields = [
         ("type", type),
         ("profile", customerId),
@@ -146,7 +146,7 @@ class NFCModule {
       }
       let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
       let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "<empty>"
-      print("[RawNFCUpload] apiVersion=\(RawNFCUploadConfig.apiVersion) status=\(statusCode) body=\(bodyString)")
+      print("[RawNFCUpload] apiVersion=\(RawUploadConfig.apiVersion) status=\(statusCode) body=\(bodyString)")
       resolve(statusCode >= 200 && statusCode < 300)
     }.resume()
   }
