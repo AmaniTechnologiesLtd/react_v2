@@ -57,9 +57,139 @@ class AutoSelfieModule {
     resolve(nil)
   }
 
-  public func upload(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    module.upload { isSuccess in
-      resolve(isSuccess)
+  // WORKAROUND (see RawUploadConfig.swift): same backend gap as NFCModule/SelfieModule.upload()
+  // — the native SDK's upload() sends `device_data` / `upload_source` fields the backend can't
+  // handle ("Not implemented error"). This bypasses module.upload() and POSTs a minimal
+  // multipart body directly, same minimal field set as NFC's Android wrapper.
+  //
+  // AutoSelfie is a thin wrapper: its own upload()/addDocument() just delegate straight through
+  // to PoseEstimation.sharedInstance, so the actual captured image lives in
+  // PoseEstimation.sharedInstance's private `imgSession`, not on `module` itself. `type` is read
+  // off `module` (AutoSelfie.sharedInstance) directly — AutoSelfie.start() already pushes it into
+  // PoseEstimation's config, so both stay in sync. `PoseEstimation` and its `sharedInstance` are
+  // public, but `imgSession` (and its own type, DocImage, and DocImage's `imageObj`) are not —
+  // Mirror reflects through both the same way NFCModule/SelfieModule do, since access control is
+  // compile-time only. `imageObj[0]` holds the front-step capture as a raw base64 JPEG string
+  // (steps.front.rawValue == 0), already exactly what the native upload would have sent. Remove
+  // this override (and RawUploadConfig) once the backend fix ships.
+  private func dumpImgSession(_ label: String, _ value: Any) -> String? {
+    var found: String?
+    print("[RawAutoSelfieUpload][debug] \(label) imgSession children:")
+    for child in Mirror(reflecting: value).children {
+      print("[RawAutoSelfieUpload][debug]   label=\(child.label ?? "nil") value=\(child.value)")
+      if child.label == "imageObj", let imageObj = child.value as? [Int: String] {
+        found = imageObj[0]
+      }
     }
+    return found
+  }
+
+  public func upload(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    var docType: String?
+    var autoSelfieImgSession: Any?
+    print("[RawAutoSelfieUpload][debug] module (AutoSelfie) children:")
+    for child in Mirror(reflecting: module).children {
+      print("[RawAutoSelfieUpload][debug]   label=\(child.label ?? "nil") value=\(child.value)")
+      if child.label == "type" {
+        docType = child.value as? String
+      }
+      if child.label == "imgSession" {
+        autoSelfieImgSession = child.value
+      }
+    }
+
+    var poseImgSession: Any?
+    var poseDocuments: Any?
+    print("[RawAutoSelfieUpload][debug] PoseEstimation.sharedInstance children:")
+    for child in Mirror(reflecting: PoseEstimation.sharedInstance).children {
+      print("[RawAutoSelfieUpload][debug]   label=\(child.label ?? "nil") value=\(child.value)")
+      if child.label == "imgSession" {
+        poseImgSession = child.value
+      }
+      if child.label == "documents" {
+        poseDocuments = child.value
+      }
+    }
+    print("[RawAutoSelfieUpload][debug] PoseEstimation.documents = \(String(describing: poseDocuments))")
+
+    var rawBase64: String?
+    if let poseImgSession = poseImgSession {
+      rawBase64 = dumpImgSession("PoseEstimation", poseImgSession)
+    }
+    if rawBase64 == nil, let autoSelfieImgSession = autoSelfieImgSession {
+      rawBase64 = dumpImgSession("AutoSelfie", autoSelfieImgSession)
+    }
+
+    guard let rawBase64 = rawBase64, let type = docType else {
+      print("[RawAutoSelfieUpload][debug] FAILED — docType=\(docType ?? "nil"), rawBase64 present=\(rawBase64 != nil)")
+      reject("AutoSelfieModule", "No selfie capture data available to upload", nil)
+      return
+    }
+
+    let base64Image = "data:image/jpeg;base64,\(rawBase64)"
+    let customerId = Amani.sharedInstance.customerInfo().getCustomer().id ?? ""
+
+    let server = RawUploadConfig.server
+    let trimmedServer = server.hasSuffix("/") ? String(server.dropLast()) : server
+
+    let urlString: String
+    let authHeader: String
+    var fields: [(String, String)]
+
+    if RawUploadConfig.apiVersion == "v1" {
+      urlString = "\(trimmedServer)/api/v1/recognition/web/upload?ln=\(RawUploadConfig.lang)"
+      authHeader = "token \(RawUploadConfig.token)"
+      fields = [
+        ("type", type),
+        ("customer_id", customerId),
+        ("files[]", base64Image),
+        ("cropped", "false"),
+        ("attempt", "1"),
+      ]
+    } else {
+      urlString = "\(trimmedServer)/api/v2/document"
+      authHeader = "Bearer \(RawUploadConfig.token)"
+      fields = [
+        ("type", type),
+        ("profile", customerId),
+        ("pages", base64Image),
+        ("cropped", "false"),
+        ("rotated", "true"),
+      ]
+    }
+
+    guard let url = URL(string: urlString) else {
+      reject("AutoSelfieModule", "Invalid server URL", nil)
+      return
+    }
+
+    let boundary = "Boundary-\(UUID().uuidString)"
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    request.setValue(authHeader, forHTTPHeaderField: "Authorization")
+
+    var body = Data()
+    func appendField(name: String, value: String) {
+      body.append("--\(boundary)\r\n".data(using: .utf8)!)
+      body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+      body.append("\(value)\r\n".data(using: .utf8)!)
+    }
+    for (name, value) in fields {
+      appendField(name: name, value: value)
+    }
+    body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+    request.httpBody = body
+
+    URLSession.shared.dataTask(with: request) { data, response, error in
+      if let error = error {
+        reject("AUTOSELFIE_UPLOAD_ERROR", error.localizedDescription, error)
+        return
+      }
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+      let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "<empty>"
+      print("[RawAutoSelfieUpload] apiVersion=\(RawUploadConfig.apiVersion) status=\(statusCode) body=\(bodyString)")
+      resolve(statusCode >= 200 && statusCode < 300)
+    }.resume()
   }
 }
