@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "test": "jest",
+    "test:smoke": "jest --config jest.smoke.config.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",
