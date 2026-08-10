@@ -33,7 +33,10 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        # Not --frozen-lockfile: the committed yarn.lock is in Yarn Berry's
+        # format while CI runs Yarn Classic, so a strict lockfile match isn't
+        # possible here today.
+        run: yarn install
 
       - name: Smoke test
         run: yarn test:smoke
